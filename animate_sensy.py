@@ -9,6 +9,7 @@ from scipy import signal
 import pandas as pd
 import matplotlib.cm as cm
 import os
+from spectralAnalysis import spectralAnalysis
 
 ## INFORMATION
 # This script is to visualise 3D HPE (Human Pose Estimation) in 3D space. It can handle input as XYZ 3D positional coordinates from any output system (e.g. mocap, IMU) as long as they are saved as
@@ -29,7 +30,7 @@ offset_marker       = 'rfoo_x' #lank_smpl_x'#'LAnkJnt_positionX'#'lank_smpl_x' #
 
 file_identifier = '.csv'
 
-scale_factor = 1000
+scale_factor = 1
 
 # Filtering parameters         
 f_order = 4
@@ -48,14 +49,14 @@ if not os.path.exists(data_path_in + 'Figures/'):
     os.mkdir(data_path_in + 'Figures/')
 
 # Check if ./Out/Processed path exists if not make folder
-if not os.path.exists(data_path_in + 'Out/Processed/'):
-    os.mkdir(data_path_in + 'Out/Processed/')
+if not os.path.exists(data_path_out + 'Processed/'):
+    os.mkdir(data_path_out + 'Processed/')
 
 # List files in directory, loop through them and check for .csv
 csv_files = os.listdir(data_path_in)
 
 for i_csv_file in csv_files:
-    if i_csv_file.endswith(file_identifier): #3DTracked
+    if i_csv_file.endswith(file_identifier): 
 
         # Load in tracked joint data from 3D pose estimation
         if flag_seperateXYZ == True:
@@ -114,6 +115,8 @@ for i_csv_file in csv_files:
             z_min = np.min(pose_z)
             z_max = np.max(pose_z)
 
+            spectralAnalysis(pose_x[:,0], 1/30)
+
             if np.isnan(z_min):
                 z_min = -0.1
 
@@ -169,20 +172,13 @@ for i_csv_file in csv_files:
                 ax.grid(False)   
 
                 # Load and draw connections depending to the type of skeleton from METRABS
-                # if flag_seperateXYZ:
-                #     cons = np.loadtxt(data_path_in + i_csv_file[:-14] + '_edges.txt', dtype=int)
-                #     n_cons = cons.__len__()
+                
+                cons = np.loadtxt('sency_edges.txt', dtype=int)
+                n_cons = cons.__len__()
 
-                #     for i_con in range(0, n_cons):
-                #         ax.plot([x[cons[i_con][0]], x[cons[i_con][1]]], [y[cons[i_con][0]],y[cons[i_con][1]]], [z[cons[i_con][0]], z[cons[i_con][1]]],color = 'green')
-                # # Hard code for XSens connections
-                # else:
-                #
-                #     n_cons = cons.__len__()
-
-                #     for i_con in range(0, n_cons):
-                #         ax.plot([x[cons[i_con][0]], x[cons[i_con][1]]], [y[cons[i_con][0]],y[cons[i_con][1]]], [z[cons[i_con][0]], z[cons[i_con][1]]],color = 'green')
-            
+                for i_con in range(0, n_cons):
+                    ax.plot([x[cons[i_con][0]], x[cons[i_con][1]]], [y[cons[i_con][0]],y[cons[i_con][1]]], [z[cons[i_con][0]], z[cons[i_con][1]]],color = 'green')
+           
             fig = plt.figure(dpi=100)
             fig.set_figheight(9.6)
             fig.set_figwidth(12.8)
@@ -198,7 +194,5 @@ for i_csv_file in csv_files:
             ani.save(data_path_in + 'Figures/' + fig_name + '.gif', writer = writer )
 
             plt.close()
-
-            
                 
             print('Animation complete for:' + data_path_in + 'Figures/' + fig_name + '.gif')
