@@ -3,9 +3,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def spectralAnalysis(data, dt):
+def spectralAnalysis(data, f_sample):
     "Run an FFT to complete a power density analysis for data. Useful when designing filters."
-    
+   
+    dt = 1/f_sample
     length = len(data)
     data = data #- np.average(data) # Removes average as signal is likely not a zero average
     fhat = np.fft.fft(data,length)
@@ -19,10 +20,10 @@ def spectralAnalysis(data, dt):
 
     return
 
-# # Example data
-# dt = 0.001 # Define time step
+# # # Example data
+# dt = 1/250 # Define time step
 # t = np.arange(0,1,dt) # Define time vector
-# data_in = np.sin(2*np.pi*50*t) + np.sin(2*np.pi*150*t) # Create sinusoidal 
+# data_in = np.sin(2*np.pi*30*t) + np.sin(2*np.pi*4*t) + np.sin(2*np.pi*80*t)# Create sinusoidal 
 # data_in = data_in + 2.5*np.random.randn(len(t)) # Add noise
 
-# spectralAnalysis(data_in)
+# spectralAnalysis(data_in, dt)

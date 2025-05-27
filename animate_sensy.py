@@ -30,6 +30,7 @@ offset_marker       = 'rfoo_x' #lank_smpl_x'#'LAnkJnt_positionX'#'lank_smpl_x' #
 
 file_identifier = '.csv'
 
+# Scale from mm to m etc. if needed
 scale_factor = 1
 
 # Filtering parameters         
