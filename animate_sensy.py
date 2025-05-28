@@ -20,6 +20,7 @@ plt.ioff()
 plt.style.use('dark_background')
 
 # False if from IMU data
+flag_3D             = True
 flag_seperateXYZ    = True 
 flag_makeGIF        = True
 flag_filter         = False
@@ -65,13 +66,13 @@ for i_csv_file in csv_files:
             # Get base trial name
             trial_name = data_path_in + i_csv_file
 
-            data_xyz = pd.read_csv(trial_name)
+            data_xyz = pd.read_csv(trial_name, index_col=False)
 
             # Check if Column exists and remove it
             data_headers = data_xyz.columns
 
             if data_headers.__contains__('timestamp'):
-                data_xyz = data_xyz.drop(columns='timestamp')
+                data_xyz = data_xyz.drop('timestamp', axis=1)
                 data_headers = data_headers.drop('timestamp')
             
             # Get Data shape
@@ -101,13 +102,19 @@ for i_csv_file in csv_files:
 
             # Save out processed data
             out_xyz = pd.DataFrame(pose_xyz)
-            out_xyz.to_csv((data_path_out + i_csv_file[:-4] + '_pro.csv'), header = data_headers)
+            out_xyz.to_csv((data_path_out + 'Processed/' + i_csv_file[:-4] + '_pro.csv'), header = data_headers)
             
             # Split Data to X, Y, Z
             pose_xyz=pose_xyz * scale_factor
-            pose_x = pose_xyz[:,0::3]         
-            pose_y = pose_xyz[:,1::3]       
-            pose_z = pose_xyz[:,2::3]
+            
+            if flag_3D == True:     
+                pose_x = pose_xyz[:,0::3]         
+                pose_y = pose_xyz[:,1::3]  
+                pose_z = pose_xyz[:,2::3]
+            else:
+                pose_x = pose_xyz[:,0::2]         
+                pose_y = pose_xyz[:,1::2]  
+                pose_z = np.zeros(np.shape(pose_y))
 
             x_min = np.min(pose_x)
             x_max = np.max(pose_x)
@@ -116,7 +123,6 @@ for i_csv_file in csv_files:
             z_min = np.min(pose_z)
             z_max = np.max(pose_z)
 
-            spectralAnalysis(pose_x[:,0], 1/30)
 
             if np.isnan(z_min):
                 z_min = -0.1
@@ -147,9 +153,9 @@ for i_csv_file in csv_files:
                 ax.cla()
 
                 # Plot Global frame
-                ax.plot([0,200], [0,0], [0,0],color = 'red')
-                ax.plot([0,0], [0,200], [0,0],color = 'green')
-                ax.plot([0,0], [0,0], [0,200],color = 'blue')
+                ax.plot([0,0.1], [0,0], [0,0],color = 'red')
+                ax.plot([0,0], [0,0.1], [0,0],color = 'green')
+                ax.plot([0,0], [0,0], [0,0.1],color = 'blue')
                 ax.scatter(0, 0, 0, c = 'red', s = 15, marker = 'o')
                 
                 # Update position of segments points
@@ -157,7 +163,10 @@ for i_csv_file in csv_files:
                 y = pose_y[i, :]
                 z = pose_z[i, :]
 
-                ax.scatter(x, y, z, c = 'red', s = 15, marker = 'o')
+                if flag_3D == True:
+                    ax.scatter(x, y, z, c = 'red', s = 15, marker = 'o')
+                else:
+                    ax.scatter(x, y, c = 'red', s = 15, marker = 'o')
 
                 for i_joint in track_marker_idx:
                     X.append(x[i_joint])
@@ -177,14 +186,20 @@ for i_csv_file in csv_files:
                 cons = np.loadtxt('sency_edges.txt', dtype=int)
                 n_cons = cons.__len__()
 
-                for i_con in range(0, n_cons):
-                    ax.plot([x[cons[i_con][0]], x[cons[i_con][1]]], [y[cons[i_con][0]],y[cons[i_con][1]]], [z[cons[i_con][0]], z[cons[i_con][1]]],color = 'green')
-           
+                if flag_3D == True:
+                    for i_con in range(0, n_cons):
+                        ax.plot([x[cons[i_con][0]], x[cons[i_con][1]]], [y[cons[i_con][0]],y[cons[i_con][1]]], [z[cons[i_con][0]], z[cons[i_con][1]]],color = 'green')
+                        ax.view_init(36, 0, 90)
+                        plt.draw()
+                else:
+                    for i_con in range(0, n_cons):
+                        ax.plot([x[cons[i_con][0]], x[cons[i_con][1]]], [y[cons[i_con][0]],y[cons[i_con][1]]], color = 'green')
+
             fig = plt.figure(dpi=100)
             fig.set_figheight(9.6)
             fig.set_figwidth(12.8)
             ax = fig.add_subplot(projection='3d')
-            
+                     
             # Create .git animation
             fig_name = i_csv_file[0:-4] #+ '_lp1_4order_offToe'
             
@@ -192,6 +207,7 @@ for i_csv_file in csv_files:
             writer = animation.PillowWriter(fps = f_sampling,
                                                 metadata = 'None',  #dict(artist = 'Me')
                                                 bitrate = 1000)   #1800
+            
             ani.save(data_path_in + 'Figures/' + fig_name + '.gif', writer = writer )
 
             plt.close()
