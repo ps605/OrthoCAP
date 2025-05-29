@@ -20,14 +20,16 @@ plt.ioff()
 plt.style.use('dark_background')
 
 # False if from IMU data
-flag_3D             = True
+flag_3D             = False
 flag_seperateXYZ    = True 
 flag_makeGIF        = True
 flag_filter         = False
 flag_rotate         = False 
-flag_remOffset      = False
+flag_remOffset      = True
 # Select at what marker to take offset. This will stop "floating"
-offset_marker       = 'rfoo_x' #lank_smpl_x'#'LAnkJnt_positionX'#'lank_smpl_x' #'ankleRightX'
+offset_marker       = 'LAnkle x' #lank_smpl_x'#'LAnkJnt_positionX'#'lank_smpl_x' #'ankleRightX'
+
+
 
 file_identifier = '.csv'
 
@@ -59,6 +61,35 @@ csv_files = os.listdir(data_path_in)
 
 for i_csv_file in csv_files:
     if i_csv_file.endswith(file_identifier): 
+        
+        if flag_3D == True and i_csv_file.__contains__('3D') == True:
+            print("\n")
+            print("###")
+            print("Animating 3D Sency Data from OrhtoCAP")
+            print("Filename: " + i_csv_file + '...')
+            print("Indicates it is 3D (x, y, z) datand flag indicates 3D.")
+        elif flag_3D == True and i_csv_file.__contains__('3D') == False:
+            print("\n")
+            print("###")
+            print("Animating 3D Sency Data from OrhtoCAP")
+            print("Filename: " + i_csv_file + '...')
+            print("Indicates it is 2D (x, y) data but flag indicates 3D. Correct setup and try again.")
+            raise("flag_3D mismatch with data")
+        elif flag_3D == False and i_csv_file.__contains__('3D') == True:
+            print("\n")
+            print("###")
+            print("Animating 2D Sency Data from OrhtoCAP")
+            print("Filename: " + i_csv_file + '...')
+            print("Indicates it is 3D (x, y, z) data but flag indicates 3D. Correct setup and try again.")
+            raise Exception("flag_3D mismatch with data")
+        elif flag_3D == False and i_csv_file.__contains__('3D') == False:
+            print("\n")
+            print("###")
+            print("Animating 3D Sency Data from OrhtoCAP")
+            print("Filename: " + i_csv_file + '...')
+            print("Indicates it is 2D (x, y) data and flag indicates 2D.")
+           
+            
 
         # Load in tracked joint data from 3D pose estimation
         if flag_seperateXYZ == True:
@@ -71,6 +102,7 @@ for i_csv_file in csv_files:
             # Check if Column exists and remove it
             data_headers = data_xyz.columns
 
+            # Get column headers
             if data_headers.__contains__('timestamp'):
                 data_xyz = data_xyz.drop('timestamp', axis=1)
                 data_headers = data_headers.drop('timestamp')
